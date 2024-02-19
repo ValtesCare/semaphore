@@ -10,11 +10,17 @@ import (
 	"strings"
 )
 
-const emailTemplate = "Subject: Task '{{ .Name }}' failed\r\n" +
+const emailTemplateFail = "Subject: Task '{{ .Name }}' failed\r\n" +
 	"From: {{ .From }}\r\n" +
 	"\r\n" +
 	"Task {{ .TaskID }} with template '{{ .Name }}' has failed!`\n" +
 	"Task Log: {{ .TaskURL }}"
+
+const emailTemplateSuccess = "Subject: Task '{{ .Name }}' finished\r\n" +
+"From: {{ .From }}\r\n" +
+"\r\n" +
+"Task {{ .TaskID }} with template '{{ .Name }}' has finished successfully!\n" +
+"Task Log: {{ .TaskURL }}"
 
 const telegramTemplate = `{"chat_id": "{{ .ChatID }}","parse_mode":"HTML","text":"<code>{{ .Name }}</code>\n#{{ .TaskID }} <b>{{ .TaskResult }}</b> <code>{{ .TaskVersion }}</code> {{ .TaskDescription }}\nby {{ .Author }}\n{{ .TaskURL }}"}`
 
@@ -41,6 +47,9 @@ func (t *TaskRunner) sendMailAlert() {
 
 	mailHost := util.Config.EmailHost + ":" + util.Config.EmailPort
 
+	var tpl *template.Template
+	var err error
+
 	var mailBuffer bytes.Buffer
 	alert := Alert{
 		TaskID: strconv.Itoa(t.Task.ID),
@@ -50,8 +59,13 @@ func (t *TaskRunner) sendMailAlert() {
 			"?t=" + strconv.Itoa(t.Task.ID),
 		From: util.Config.EmailSender,
 	}
-	tpl := template.New("mail body template")
-	tpl, err := tpl.Parse(emailTemplate)
+	tpl = template.New("mail body template")
+
+	if t.Task.Status == lib.TaskSuccessStatus {
+		tpl, err = tpl.Parse(emailTemplateSuccess)
+	} else {
+		tpl, err = tpl.Parse(emailTemplateFail)
+	}
 	util.LogError(err)
 
 	t.panicOnError(tpl.Execute(&mailBuffer, alert), "Can't generate alert template!")

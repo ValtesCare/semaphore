@@ -71,7 +71,7 @@ func (t *TaskRunner) SetStatus(status lib.TaskStatus) {
 
 	t.saveStatus()
 
-	if status == lib.TaskFailStatus {
+	if status == lib.TaskSuccessStatus || status == lib.TaskFailStatus {
 		t.sendMailAlert()
 	}
 
