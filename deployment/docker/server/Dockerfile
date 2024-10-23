@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM golang:1.22-alpine3.18 as builder
+FROM --platform=$BUILDPLATFORM golang:1.22-alpine3.20 as builder
 
 RUN apk add --no-cache -U \
     libc-dev curl nodejs npm git gcc zip unzip tar
@@ -23,7 +23,7 @@ RUN --mount=type=cache,target=/go/pkg \
     task deps && \
     task build GOOS=${TARGETOS} GOARCH=${TARGETARCH}
 
-FROM alpine:3.19
+FROM alpine:3.20
 
 RUN apk add --no-cache -U \
 bash curl git gnupg mysql-client openssh-client-default python3 python3-dev py3-pip rsync sshpass tar tini tzdata unzip wget zip build-base openssl-dev libffi-dev cargo && \
